@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block title %}Transacciones | Finanzas Personales{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Transacciones</h1>
+    <a href="/transactions/create" class="btn btn-primary">Nueva Transacción</a>
+</div>
+
+{% if transactions %}
+<div class="card shadow">
+    <div class="table-responsive">
+        <table class="table table-striped mb-0">
+            <thead class="table-dark">
+                <tr>
+                    <th>Fecha</th>
+                    <th>Tipo</th>
+                    <th>Categoría</th>
+                    <th>Descripción</th>
+                    <th>Monto</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for transaction in transactions %}
+                <tr>
+                    <td>{{ transaction.date.strftime('%d/%m/%Y') }}</td>
+                    <td>
+                        {% if transaction.type == 'income' %}
+                        <span class="badge bg-success">Ingreso</span>
+                        {% else %}
+                        <span class="badge bg-danger">Gasto</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ transaction.category.name }}</td>
+                    <td>{{ transaction.description }}</td>
+                    <td class="{% if transaction.type == 'income' %}text-success{% else %}text-danger{% endif %}">
+                        {% if transaction.type == 'income' %}+{% else %}-{% endif %}
+                        ${{ "%.2f"|format(transaction.amount) }}
+                    </td>
+                    <td>
+                        <div class="d-flex gap-2">
+                            <a href="/transactions/edit/{{ transaction.id }}" class="btn btn-sm btn-outline-primary">Editar</a>
+                            <a href="/transactions/delete/{{ transaction.id }}" class="btn btn-sm btn-outline-danger" 
+                               onclick="return confirm('¿Estás seguro de que deseas eliminar esta transacción?')">Eliminar</a>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% else %}
+<div class="alert alert-info">
+    No hay transacciones registradas. ¡Comienza a registrar tus ingresos y gastos!
+</div>
+{% endif %}
+{% endblock %}

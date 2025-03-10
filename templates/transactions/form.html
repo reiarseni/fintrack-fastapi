@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+
+{% block title %}
+    {% if transaction %}Editar Transacción{% else %}Nueva Transacción{% endif %} | Finanzas Personales
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h3 class="mb-0">
+                    {% if transaction %}Editar Transacción{% else %}Nueva Transacción{% endif %}
+                </h3>
+            </div>
+            <div class="card-body">
+                {% if not categories %}
+                <div class="alert alert-warning">
+                    Necesitas crear categorías antes de registrar transacciones. 
+                    <a href="/categories/create" class="alert-link">Crear una categoría</a>
+                </div>
+                {% else %}
+                <form method="post">
+                    <div class="mb-3">
+                        <label for="type" class="form-label">Tipo de Transacción</label>
+                        <select class="form-select" id="type" name="type" required>
+                            <option value="income" {% if transaction and transaction.type == 'income' %}selected{% endif %}>Ingreso</option>
+                            <option value="expense" {% if transaction and transaction.type == 'expense' %}selected{% endif %}>Gasto</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="amount" class="form-label">Monto</label>
+                        <div class="input-group">
+                            <span class="input-group-text">$</span>
+                            <input type="number" class="form-control" id="amount" name="amount" step="0.01" min="0.01" 
+                                value="{{ "%.2f"|format(transaction.amount) if transaction else '' }}" required>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Descripción</label>
+                        <input type="text" class="form-control" id="description" name="description" 
+                            value="{{ transaction.description if transaction else '' }}" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="category_id" class="form-label">Categoría</label>
+                        <select class="form-select" id="category_id" name="category_id" required>
+                            {% for category in categories %}
+                            <option value="{{ category.id }}" 
+                                {% if transaction and transaction.category_id == category.id %}selected{% endif %}
+                                data-type="{{ category.type }}">
+                                {{ category.name }} ({{ 'Ingreso' if category.type == 'income' else 'Gasto' }})
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="d-flex justify-content-between">
+                        <a href="/transactions/" class="btn btn-secondary">Cancelar</a>
+                        <button type="submit" class="btn btn-primary">Guardar</button>
+                    </div>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const typeSelect = document.getElementById('type');
+        const categorySelect = document.getElementById('category_id');
+        
+        // Función para filtrar categorías según el tipo seleccionado
+        function filterCategories() {
+            const selectedType = typeSelect.value;
+            
+            Array.from(categorySelect.options).forEach(option => {
+                const categoryType = option.getAttribute('data-type');
+                if (categoryType === selectedType) {
+                    option.style.display = '';
+                } else {
+                    option.style.display = 'none';
+                }
+            });
+            
+            // Seleccionar primera categoría visible
+            const visibleOptions = Array.from(categorySelect.options).filter(opt => opt.style.display !== 'none');
+            if (visibleOptions.length > 0) {
+                categorySelect.value = visibleOptions[0].value;
+            }
+        }
+        
+        // Filtrar al cargar la página
+        filterCategories();
+        
+        // Filtrar cuando cambie el tipo
+        typeSelect.addEventListener('change', filterCategories);
+    });
+</script>
+{% endblock %}
